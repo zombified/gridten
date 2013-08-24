@@ -7,7 +7,19 @@
 
 (function(){
 
+var getTimeStamp;
+if(window.performance.now) {
+    getTimeStamp = function(){return window.performance.now();};
+}
+else if(window.perfomance.webkitNow) {
+    getTimeStamp = function(){return window.perfomance.webkitNow();};
+}
+else {
+    getTimeStamp = function(){return new Date().getTime();};
+}
 
+var SIM_TIME;
+var TIME_STEP = 16; // ms
 var BOARD_DIM = [10, 10]; // w, h
 var BOARD_SEP = 40;
 var BOARD_HALF_SEP = Math.floor(BOARD_SEP / 2);
@@ -71,6 +83,7 @@ Snake.prototype.reset = function() {
     this.direction = -1;
     this.color = '#0ff';
     this.headradius = 5;
+    this.speed = 1000;
 
     for(var i = 0; i < this._segments.length; i++) {
         SNAKE_SEG_POOL[this._segments[i]].available = true;
@@ -110,8 +123,21 @@ Snake.prototype.set_pos = function(x, y) {
         }
     }
 };
-Snake.prototype.update = function() {
+Snake.prototype.update = function(dt) {
+    var spd = dt / this.speed;
+    var xvel = 0, yvel = 0;
+    if(this.direction == NORTH) {yvel = -1*spd;}
+    else if(this.direction == EAST) {xvel = spd;}
+    else if(this.direction == SOUTH) {yvel = spd;}
+    else if(this.direction == WEST) {xval = -1*spd;}
 
+    this.headx += xvel;
+    this.heady += yvel;
+    for(var i = 0; i < this._segments.length; i++) {
+        seg = SNAKE_SEG_POOL[this._segments[i]];
+        seg.x += xvel;
+        seg.y += yvel;
+    }
 };
 Snake.prototype.draw = function() {
     ctx.fillStyle = this.color;
@@ -218,7 +244,7 @@ function setSelectedCoords() {
     }
 }
 
-function update() {
+function update(dt) {
     if(!MCLICK_HANDLED) {
         setSelectedCoords()
         MCLICK_HANDLED = true;
@@ -238,7 +264,7 @@ function update() {
     for(var i = 0; i < SNAKE_POOL.length; i++) {
         snake = SNAKE_POOL[i];
         if(!snake.active || !snake.enabled) {continue;}
-        snake.update();
+        snake.update(dt);
     }
 }
 
@@ -309,12 +335,17 @@ function render() {
 function loop() {
     window.requestAnimationFrame(loop);
 
-    update();
+    var real_time = getTimeStamp();
+    while(SIM_TIME < real_time) {
+        SIM_TIME += TIME_STEP;
+        update(TIME_STEP);
+    }
     render();
 }
 
 put_snake_in_play();
 
+SIM_TIME = getTimeStamp();
 loop();
 
 })();
