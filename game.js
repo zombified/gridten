@@ -41,7 +41,7 @@ var SNAKE_POOL = [];
 var SNAKE_SEG_POOL = [];
 var SNAKE_MIN_LENGTH = 1;
 var SNAKE_MAX_LENGTH = 5;
-var SNAKE_SPEED = 1000;
+var SNAKE_SPEED = 40;
 var NORTH = 0;
 var EAST = 1;
 var SOUTH = 2;
@@ -61,20 +61,46 @@ function randIntBetween(max, min) {
 
 
 function Snake() {
+    this._prev = {x:-1, y:-1}; // board coords
+    this._next = {x:-1, y:-1}; // board coords
     this.reset();
 }
 Snake.prototype.reset = function() {
     this.active = true; // so doesn't get snagged as free in pool
     this.enabled = false; // whether or not the snake is updated/drawn
-    this.headx = -1;
-    this.heady = -1;
+    this.headx = -1; // pixel coordinate
+    this.heady = -1; // pixel coordinate
     this.direction = -1;
     this.color = '#0ff';
     this.headradius = 5;
     this.speed = SNAKE_SPEED;
     this.length = randIntBetween(SNAKE_MAX_LENGTH, SNAKE_MIN_LENGTH);
+    this._prev.x = this._prev.y = this._next.x = this._next.y = -1;
+};
+Snake.prototype._select_next = function() {
+    if(this.direction == NORTH) {
+        this._next.x = this._prev.x;
+        this._next.y = this._prev.y - 1;
+    }
+    else if(this.direction == EAST) {
+        this._next.x = this._prev.x + 1;
+        this._next.y = this._prev.y;
+    }
+    else if(this.direction == SOUTH) {
+        this._next.x = this._prev.x;
+        this._next.y = this._prev.y + 1;
+    }
+    else if(this.direction == WEST) {
+        this._next.x = this._prev.x - 1;
+        this._next.y = this._prev.y;
+    }
 };
 Snake.prototype.update = function(dt) {
+    // do we have a next selected position? if not, select one.
+    if(this._next.x < 0 || this._next.y < 0) {
+        this._select_next();
+    }
+
     // -- UPDATE POSITION ----------------------
     var spd = dt / this.speed;
     var xvel = 0, yvel = 0;
@@ -86,14 +112,34 @@ Snake.prototype.update = function(dt) {
     this.headx += xvel;
     this.heady += yvel;
 
-    // -- UPDATE DIRECTION ---------------------
+    // have we gone past the next selected position? if so, then move back.
+    var nx = this._next.x * BOARD_SEP + BOARD_LINE_OFFSET;
+    var ny = this._next.y * BOARD_SEP + BOARD_LINE_OFFSET;
+    if(this.direction == NORTH && ny > this.heady) {this.heady = ny;}
+    else if(this.direction == EAST && nx < this.headx) {this.headx = nx;}
+    else if(this.direction == SOUTH && ny < this.heady) {this.heady = ny;}
+    else if(this.direction == WEST && nx > this.headx) {this.headx = nx;}
+
+    // if we've reached the next position, select the next position
+    if(this.headx == nx && this.heady == ny) {
+        this._prev.x = this._next.x;
+        this._prev.y = this._next.y;
+        this._select_next();
+    }
 };
 Snake.prototype.draw = function() {
     ctx.fillStyle = this.color;
     ctx.beginPath();
-    ctx.arc(this.headx*BOARD_SEP+BOARD_LINE_OFFSET, this.heady*BOARD_SEP+BOARD_LINE_OFFSET, this.headradius, 0, 2 * Math.PI, false);
+    ctx.arc(this.headx, this.heady, this.headradius, 0, 2 * Math.PI, false);
     ctx.closePath();
     ctx.fill();
+};
+// set the snake to the specified board position
+Snake.prototype.set_pos = function(x, y) {
+    this.headx = x * BOARD_SEP + BOARD_LINE_OFFSET;
+    this.heady = y * BOARD_SEP + BOARD_LINE_OFFSET;
+    this._prev.x = x;
+    this._prev.y = y;
 };
 
 function get_snake() {
@@ -110,28 +156,30 @@ function get_snake() {
 
 function put_snake_in_play() {
     var s = SNAKE_POOL[get_snake()];
+    var x, y; // board coords
     if(Math.random() > .5) {
-        s.headx = randIntBetween(BOARD_DIM[0]-1, 1);
+        x = randIntBetween(BOARD_DIM[0]-1, 1);
         if(Math.random() > .5) {
-            s.heady = 0;
+            y = 0;
             s.direction = SOUTH;
         }
         else {
-            s.heady = BOARD_DIM[1];
+            y = BOARD_DIM[1];
             s.direction = NORTH;
         }
     }
     else {
-        s.heady = randIntBetween(BOARD_DIM[1]-1, 1);
+        y = randIntBetween(BOARD_DIM[1]-1, 1);
         if(Math.random() > .5) {
-            s.headx = 0;
+            x = 0;
             s.direction = EAST;
         }
         else {
-            s.headx = BOARD_DIM[0];
+            x = BOARD_DIM[0];
             s.direction = WEST;
         }
     }
+    s.set_pos(x, y);
     s.enabled = true;
 }
 
