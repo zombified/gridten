@@ -23,9 +23,10 @@ var TIME_STEP = 16; // ms
 var BOARD_DIM = [10, 10]; // w, h
 var BOARD_SEP = 40;
 var BOARD_HALF_SEP = Math.floor(BOARD_SEP / 2);
-var BOARD_LINE_COLOR = '#888';
+var BOARD_LINE_COLOR = '#ccc';
 var BOARD_LINE_WIDTH = 1;
 var BOARD_LINE_OFFSET = .5;
+var BOARD_PEBBLE_RADIUS = 2;
 var MCOORDS = {x:0, y:0}; // pixel coords
 var MCLICK_HANDLED = true;
 var SELECTED_COORDS = {x:-1, y:-1}; // board coords
@@ -51,6 +52,7 @@ var NORTHWEST = 5;
 var SOUTHEAST = 6;
 var SOUTHWEST = 7;
 var BARRICADE_SIZE = 8;
+var BARRICADE_COLOR = '#aaa';
 
 
 var canvas = document.getElementById('gameboard');
@@ -296,7 +298,7 @@ function drawBarricade(dir_pointing, cx, cy) {
     var maxx = cx+BARRICADE_SIZE;
     var miny = cy-BARRICADE_SIZE;
     var maxy = cy+BARRICADE_SIZE;
-    ctx.fillStyle = '#000';
+    ctx.fillStyle = BARRICADE_COLOR;
     ctx.beginPath();
     if(dir_pointing == NORTH) {
         ctx.moveTo(cx, miny);
@@ -328,22 +330,32 @@ function drawBarricade(dir_pointing, cx, cy) {
 
 
 function drawBoard() {
+    ctx.fillStyle = BOARD_LINE_COLOR;
     ctx.strokeStyle = BOARD_LINE_COLOR;
     ctx.lineWidth = BOARD_LINE_WIDTH;
     ctx.beginPath();
-    var t;
+    var tx, ty;
     for(var x = 1; x < BOARD_DIM[0]; x++) {
-        t = x * BOARD_SEP + BOARD_LINE_OFFSET;
-        ctx.moveTo(t, 0);
-        ctx.lineTo(t, canvas.height);
+        tx = x * BOARD_SEP + BOARD_LINE_OFFSET;
+        ctx.moveTo(tx, 0);
+        ctx.lineTo(tx, canvas.height);
     }
     for(var y = 1; y < BOARD_DIM[1]; y++ ) {
-        t = y * BOARD_SEP + BOARD_LINE_WIDTH;
-        ctx.moveTo(0, t);
-        ctx.lineTo(canvas.width, t);
+        ty = y * BOARD_SEP + BOARD_LINE_WIDTH;
+        ctx.moveTo(0, ty);
+        ctx.lineTo(canvas.width, ty);
+    }
+    for(var x = 1; x < BOARD_DIM[0]; x++) {
+        for(var y = 1; y < BOARD_DIM[1]; y++) {
+            tx = x * BOARD_SEP + BOARD_LINE_OFFSET;
+            ty = y * BOARD_SEP + BOARD_LINE_WIDTH;
+            ctx.moveTo(tx, ty);
+            ctx.arc(tx, ty, BOARD_PEBBLE_RADIUS, 0, 2 * Math.PI, false);
+        }
     }
     ctx.closePath();
     ctx.stroke();
+    ctx.fill();
 }
 
 function drawMouseHighlight() {
