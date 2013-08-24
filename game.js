@@ -76,8 +76,30 @@ Snake.prototype.reset = function() {
     this.speed = SNAKE_SPEED;
     this.length = randIntBetween(SNAKE_MAX_LENGTH, SNAKE_MIN_LENGTH);
     this._prev.x = this._prev.y = this._next.x = this._next.y = -1;
+    this._started = false;
 };
 Snake.prototype._select_next = function() {
+    // only switch directions after we've started moving
+    if(this._started) {
+        var ax = APPLE.x * BOARD_SEP + BOARD_LINE_OFFSET;
+        var ay = APPLE.y * BOARD_SEP + BOARD_LINE_OFFSET;
+        var diffx = Math.abs(this.headx - ax);
+        var diffy = Math.abs(this.heady - ay);
+        if(ax > this.headx && diffx > diffy) {
+            this.direction = EAST;
+        }
+        else if(ax < this.headx && diffx > diffy) {
+            this.direction = WEST;
+        }
+        else if(ay > this.heady && diffy >= diffx) {
+            this.direction = SOUTH;
+        }
+        else if(ay < this.heady && diffy >= diffx) {
+            this.direction = NORTH;
+        }
+    }
+    this._started = true;
+
     if(this.direction == NORTH) {
         this._next.x = this._prev.x;
         this._next.y = this._prev.y - 1;
