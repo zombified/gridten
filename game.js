@@ -69,6 +69,8 @@ Snake.prototype.reset = function() {
     this.headx = -1;
     this.heady = -1;
     this.direction = -1;
+    this.color = '#0ff';
+    this.headradius = 5;
 
     for(var i = 0; i < this._segments.length; i++) {
         SNAKE_SEG_POOL[this._segments[i]].available = true;
@@ -83,17 +85,40 @@ Snake.prototype.reset = function() {
 Snake.prototype.set_pos = function(x, y) {
     this.headx = x;
     this.heady = y;
-    var seg;
+    var seg, prevx = x, prevy = y;
     for(var i = 0; i < this._segments.length; i++) {
         seg = SNAKE_SEG_POOL[this._segments[i]];
-        seg.
+        if(this.direction == NORTH) {
+            seg.x = prevx;
+            seg.y = prevy+1;
+            prevy = seg.y;
+        }
+        else if(this.direction == EAST) {
+            seg.x = prevx+1;
+            prevx = seg.x;
+            seg.y = prevy;
+        }
+        else if(this.direction == SOUTH) {
+            seg.x = prevx;
+            seg.y = prevy-1;
+            prevy = seg.y;
+        }
+        else if(this.direction == WEST) {
+            seg.x = prevx-1;
+            prevx = seg.x;
+            seg.y = prevy;
+        }
     }
 };
 Snake.prototype.update = function() {
 
 };
 Snake.prototype.draw = function() {
-
+    ctx.fillStyle = this.color;
+    ctx.beginPath();
+    ctx.arc(this.headx*BOARD_SEP+BOARD_LINE_OFFSET, this.heady*BOARD_SEP+BOARD_LINE_OFFSET, this.headradius, 0, 2 * Math.PI, false);
+    ctx.closePath();
+    ctx.fill();
 };
 
 function get_snake() {
@@ -106,6 +131,35 @@ function get_snake() {
 
     SNAKE_POOL.push(new Snake());
     return SNAKE_POOL.length-1;
+}
+
+function put_snake_in_play() {
+    var s = SNAKE_POOL[get_snake()];
+    var x, y;
+    if(Math.random() > .5) {
+        x = randIntBetween(BOARD_DIM[0]-1, 1);
+        if(Math.random() > .5) {
+            y = 0;
+            s.direction = SOUTH;
+        }
+        else {
+            y = BOARD_DIM[1];
+            s.direction = NORTH;
+        }
+    }
+    else {
+        y = randIntBetween(BOARD_DIM[1]-1, 1);
+        if(Math.random() > .5) {
+            x = 0;
+            s.direction = EAST;
+        }
+        else {
+            x = BOARD_DIM[0];
+            s.direction = WEST;
+        }
+    }
+    s.set_pos(x, y);
+    s.enabled = true;
 }
 
 
@@ -259,13 +313,7 @@ function loop() {
     render();
 }
 
-var s = SNAKE_POOL[get_snake()];
-if(Math.random() > .5) {
-    s.headx = randIntBetween(BOARD_DIM[0], 0);
-}
-else {
-    s.heady = randIntBetween(BOARD_DIM[1], 0);
-}
+put_snake_in_play();
 
 loop();
 
