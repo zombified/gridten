@@ -46,6 +46,11 @@ var NORTH = 0;
 var EAST = 1;
 var SOUTH = 2;
 var WEST = 3;
+var NORTHEAST = 4;
+var NORTHWEST = 5;
+var SOUTHEAST = 6;
+var SOUTHWEST = 7;
+var BARRICADE_SIZE = 8;
 
 
 var canvas = document.getElementById('gameboard');
@@ -286,6 +291,41 @@ function update(dt) {
 }
 
 
+function drawBarricade(dir_pointing, cx, cy) {
+    var minx = cx-BARRICADE_SIZE;
+    var maxx = cx+BARRICADE_SIZE;
+    var miny = cy-BARRICADE_SIZE;
+    var maxy = cy+BARRICADE_SIZE;
+    ctx.fillStyle = '#000';
+    ctx.beginPath();
+    if(dir_pointing == NORTH) {
+        ctx.moveTo(cx, miny);
+        ctx.lineTo(maxx, cy);
+        ctx.lineTo(minx, cy);
+        ctx.lineTo(cx, miny);
+    }
+    else if(dir_pointing == EAST) {
+        ctx.moveTo(maxx, cy);
+        ctx.lineTo(cx, maxy);
+        ctx.lineTo(cx, miny);
+        ctx.lineTo(maxx, cy);
+    }
+    else if(dir_pointing == SOUTH) {
+        ctx.moveTo(cx, maxy);
+        ctx.lineTo(minx, cy);
+        ctx.lineTo(maxx, cy);
+        ctx.lineTo(cx, maxy);
+    }
+    else if(dir_pointing == WEST) {
+        ctx.moveTo(minx, cy);
+        ctx.lineTo(cx, miny);
+        ctx.lineTo(cx, maxy);
+        ctx.lineTo(minx, cy);
+    }
+    ctx.closePath();
+    ctx.fill();
+}
+
 
 function drawBoard() {
     ctx.strokeStyle = BOARD_LINE_COLOR;
@@ -346,6 +386,11 @@ function render() {
         if(!snake.active || !snake.enabled) {continue;}
         snake.draw();
     }
+
+    drawBarricade(NORTH, 2*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
+    drawBarricade(EAST, 3*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
+    drawBarricade(SOUTH, 4*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
+    drawBarricade(WEST, 5*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
 }
 
 
