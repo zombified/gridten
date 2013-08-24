@@ -31,7 +31,7 @@ var MCOORDS = {x:0, y:0}; // pixel coords
 var MCLICK_HANDLED = true;
 var SELECTED_COORDS = {x:-1, y:-1}; // board coords
 var MOUSE_HIGHLIGHT_COLOR = '#f00';
-var MOUSE_HIGHLIGHT_RADIUS = 5; // pixels
+var MOUSE_HIGHLIGHT_RADIUS = 3; // pixels
 var APPLE = {
     x: -1, y: -1, // board coords
     radius: 6, // pixels
@@ -53,6 +53,9 @@ var SOUTHEAST = 6;
 var SOUTHWEST = 7;
 var BARRICADE_SIZE = 8;
 var BARRICADE_COLOR = '#aaa';
+var OBJECTS = [];
+var OBJT_NONE = -1;
+var OBJT_BARRICADE = 0;
 
 
 var canvas = document.getElementById('gameboard');
@@ -88,21 +91,27 @@ Snake.prototype.reset = function() {
 Snake.prototype._select_next = function() {
     // only switch directions after we've started moving
     if(this._started) {
-        var ax = APPLE.x * BOARD_SEP + BOARD_LINE_OFFSET;
-        var ay = APPLE.y * BOARD_SEP + BOARD_LINE_OFFSET;
-        var diffx = Math.abs(this.headx - ax);
-        var diffy = Math.abs(this.heady - ay);
-        if(ax > this.headx && diffx > diffy) {
-            this.direction = EAST;
+        var obj = OBJECTS[this._prev.x][this._prev.y];
+        if(obj.t == OBJT_BARRICADE) {
+            this.direction = obj.dir;
         }
-        else if(ax < this.headx && diffx > diffy) {
-            this.direction = WEST;
-        }
-        else if(ay > this.heady && diffy >= diffx) {
-            this.direction = SOUTH;
-        }
-        else if(ay < this.heady && diffy >= diffx) {
-            this.direction = NORTH;
+        else {
+            var ax = APPLE.x * BOARD_SEP + BOARD_LINE_OFFSET;
+            var ay = APPLE.y * BOARD_SEP + BOARD_LINE_OFFSET;
+            var diffx = Math.abs(this.headx - ax);
+            var diffy = Math.abs(this.heady - ay);
+            if(ax > this.headx && diffx > diffy) {
+                this.direction = EAST;
+            }
+            else if(ax < this.headx && diffx > diffy) {
+                this.direction = WEST;
+            }
+            else if(ay > this.heady && diffy >= diffx) {
+                this.direction = SOUTH;
+            }
+            else if(ay < this.heady && diffy >= diffx) {
+                this.direction = NORTH;
+            }
         }
     }
     this._started = true;
@@ -210,6 +219,21 @@ function put_snake_in_play() {
     }
     s.set_pos(x, y);
     s.enabled = true;
+}
+
+
+function add_barricade(dir_pointing) {
+    if(SELECTED_COORDS.x < 0 || SELECTED_COORDS.y < 0) {
+        return;
+    }
+    var obj = OBJECTS[SELECTED_COORDS.x][SELECTED_COORDS.y];
+    var x, y;
+    x = SELECTED_COORDS.x * BOARD_SEP + BOARD_LINE_OFFSET;
+    y = SELECTED_COORDS.y * BOARD_SEP + BOARD_LINE_OFFSET;
+    obj.render = function(){drawBarricade(dir_pointing, x, y);};
+    obj.active = true;
+    obj.t = OBJT_BARRICADE;
+    obj.dir = dir_pointing;
 }
 
 
@@ -328,6 +352,16 @@ function drawBarricade(dir_pointing, cx, cy) {
     ctx.fill();
 }
 
+function drawObjects() {
+    for(var x = 0; x < OBJECTS.length; x++) {
+        for(var y = 0; y < OBJECTS[x].length; y++) {
+            if(OBJECTS[x][y].active && OBJECTS[x][y].render !== -1) {
+                OBJECTS[x][y].render();
+            }
+        }
+    }
+}
+
 
 function drawBoard() {
     ctx.fillStyle = BOARD_LINE_COLOR;
@@ -389,6 +423,7 @@ function render() {
 
 
     drawBoard();
+    drawObjects();
     drawMouseHighlight();
     drawApple();
 
@@ -399,10 +434,10 @@ function render() {
         snake.draw();
     }
 
-    drawBarricade(NORTH, 2*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
-    drawBarricade(EAST, 3*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
-    drawBarricade(SOUTH, 4*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
-    drawBarricade(WEST, 5*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
+    //drawBarricade(NORTH, 2*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
+    //drawBarricade(EAST, 3*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
+    //drawBarricade(SOUTH, 4*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
+    //drawBarricade(WEST, 5*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
 }
 
 
@@ -418,6 +453,32 @@ function loop() {
 }
 
 put_snake_in_play();
+
+// handle user keyboard input
+document.addEventListener('keydown', function(ev) {
+    if(ev.keyCode == 49) { // '1'
+        add_barricade(NORTH);
+    }
+    else if(ev.keyCode == 50) { // '2'
+        add_barricade(EAST);
+    }
+    else if(ev.keyCode == 51) { // '3'
+        add_barricade(SOUTH);
+    }
+    else if(ev.keyCode == 52) { // '4'
+        add_barricade(WEST);
+    }
+});
+
+// generate object positions for every position on the board
+var col;
+for(var x = 0; x < BOARD_DIM[0]; x++) {
+    OBJECTS.push([]);
+    col = OBJECTS[OBJECTS.length-1];
+    for(var y = 0; y < BOARD_DIM[1]; y++) {
+        col.push({t:OBJT_NONE, active:false, render:-1});
+    }
+}
 
 SIM_TIME = getTimeStamp();
 loop();
