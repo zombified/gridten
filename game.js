@@ -39,8 +39,9 @@ var APPLE = {
 };
 var SNAKE_POOL = [];
 var SNAKE_SEG_POOL = [];
-var SNAKE_MIN_SEGMENTS = 1;
-var SNAKE_MAX_SEGMENTS = 5;
+var SNAKE_MIN_LENGTH = 1;
+var SNAKE_MAX_LENGTH = 5;
+var SNAKE_SPEED = 1000;
 var NORTH = 0;
 var EAST = 1;
 var SOUTH = 2;
@@ -58,21 +59,8 @@ function randIntBetween(max, min) {
     return Math.floor(Math.random() * (max - min) + min);
 }
 
-function get_segment() {
-    for(var i = 0; i < SNAKE_SEG_POOL.length; i++) {
-        if(SNAKE_SEG_POOL[i].available) {
-            SNAKE_SEG_POOL[i].available = false;
-            return i;
-        }
-    }
-
-    SNAKE_SEG_POOL.push({x:-1, y:-1, available: false});
-    return SNAKE_SEG_POOL.length - 1;
-}
-
 
 function Snake() {
-    this._segments = [];
     this.reset();
 }
 Snake.prototype.reset = function() {
@@ -83,61 +71,22 @@ Snake.prototype.reset = function() {
     this.direction = -1;
     this.color = '#0ff';
     this.headradius = 5;
-    this.speed = 1000;
-
-    for(var i = 0; i < this._segments.length; i++) {
-        SNAKE_SEG_POOL[this._segments[i]].available = true;
-    }
-    this._segments.length = 0;
-
-    var numsegs = randIntBetween(SNAKE_MAX_SEGMENTS, SNAKE_MIN_SEGMENTS);
-    for(var i = 0; i < numsegs; i++) {
-        this._segments.push(get_segment());
-    }
-};
-Snake.prototype.set_pos = function(x, y) {
-    this.headx = x;
-    this.heady = y;
-    var seg, prevx = x, prevy = y;
-    for(var i = 0; i < this._segments.length; i++) {
-        seg = SNAKE_SEG_POOL[this._segments[i]];
-        if(this.direction == NORTH) {
-            seg.x = prevx;
-            seg.y = prevy+1;
-            prevy = seg.y;
-        }
-        else if(this.direction == EAST) {
-            seg.x = prevx+1;
-            prevx = seg.x;
-            seg.y = prevy;
-        }
-        else if(this.direction == SOUTH) {
-            seg.x = prevx;
-            seg.y = prevy-1;
-            prevy = seg.y;
-        }
-        else if(this.direction == WEST) {
-            seg.x = prevx-1;
-            prevx = seg.x;
-            seg.y = prevy;
-        }
-    }
+    this.speed = SNAKE_SPEED;
+    this.length = randIntBetween(SNAKE_MAX_LENGTH, SNAKE_MIN_LENGTH);
 };
 Snake.prototype.update = function(dt) {
+    // -- UPDATE POSITION ----------------------
     var spd = dt / this.speed;
     var xvel = 0, yvel = 0;
     if(this.direction == NORTH) {yvel = -1*spd;}
     else if(this.direction == EAST) {xvel = spd;}
     else if(this.direction == SOUTH) {yvel = spd;}
-    else if(this.direction == WEST) {xval = -1*spd;}
+    else if(this.direction == WEST) {xvel = -1*spd;}
 
     this.headx += xvel;
     this.heady += yvel;
-    for(var i = 0; i < this._segments.length; i++) {
-        seg = SNAKE_SEG_POOL[this._segments[i]];
-        seg.x += xvel;
-        seg.y += yvel;
-    }
+
+    // -- UPDATE DIRECTION ---------------------
 };
 Snake.prototype.draw = function() {
     ctx.fillStyle = this.color;
@@ -161,30 +110,28 @@ function get_snake() {
 
 function put_snake_in_play() {
     var s = SNAKE_POOL[get_snake()];
-    var x, y;
     if(Math.random() > .5) {
-        x = randIntBetween(BOARD_DIM[0]-1, 1);
+        s.headx = randIntBetween(BOARD_DIM[0]-1, 1);
         if(Math.random() > .5) {
-            y = 0;
+            s.heady = 0;
             s.direction = SOUTH;
         }
         else {
-            y = BOARD_DIM[1];
+            s.heady = BOARD_DIM[1];
             s.direction = NORTH;
         }
     }
     else {
-        y = randIntBetween(BOARD_DIM[1]-1, 1);
+        s.heady = randIntBetween(BOARD_DIM[1]-1, 1);
         if(Math.random() > .5) {
-            x = 0;
+            s.headx = 0;
             s.direction = EAST;
         }
         else {
-            x = BOARD_DIM[0];
+            s.headx = BOARD_DIM[0];
             s.direction = WEST;
         }
     }
-    s.set_pos(x, y);
     s.enabled = true;
 }
 
