@@ -44,11 +44,24 @@ var MCLICK_HANDLED = true;
 var SELECTED_COORDS = {x:-1, y:-1}; // board coords
 var MOUSE_HIGHLIGHT_COLOR = '#f00';
 var MOUSE_HIGHLIGHT_RADIUS = 3; // pixels
+var APPLE_BASE_HEALTH = 10;
 var APPLE = {
     x: -1, y: -1, // board coords
     radius: 6, // pixels
-    color: '#0a0',
-    visible: false
+    colors: [
+        'rgb(163, 0, 0)',
+        'rgb(163, 40, 0)',
+        'rgb(163, 80, 0)',
+        'rgb(163, 120, 0)',
+        'rgb(163, 150, 0)',
+        'rgb(120, 163, 0)',
+        'rgb(90, 163, 0)',
+        'rgb(60, 163, 0)',
+        'rgb(30, 163, 0)',
+        'rgb(0, 163, 0)',
+    ],
+    visible: false,
+    health: APPLE_BASE_HEALTH,
 };
 var SNAKE_POOL = [];
 var SNAKE_SEG_POOL = [];
@@ -70,8 +83,10 @@ var SOUTHWEST = 7;
 var BARRICADE_SIZE = 8;
 var BARRICADE_COLOR = '#aaa';
 var BARRICADE_HEALTH = 2;
+var BARRICADE_POINTS = 3;
 var KILL_TRAP_SIZE = 8;
 var KILL_TRAP_COLOR = '#aaa';
+var KILL_TRAP_POINTS = 10;
 var OBJECTS = [];
 var OBJT_NONE = -1;
 var OBJT_BARRICADE = 0;
@@ -93,7 +108,8 @@ var LOSE_TXT_POS = [
 ];
 var LOSE_TXT_TWEEN = 0;
 var LOSE_TXT_TWEEN_DOWN = true;
-var SCORE = 0;
+var SCORE_STARTING = 10;
+var SCORE = SCORE_STARTING;
 var SCORE_TIMER = 0;
 
 
@@ -130,6 +146,15 @@ function hit_barricade(obj) {
     }
     if(window.sound_hit_object !== false) {
         window.sound_hit_object.play();
+    }
+}
+
+function hit_apple() {
+    SCORE -= 2;
+    APPLE.health -= 1;
+
+    if(APPLE.health <= 0) {
+        //ACTIVE_SCENE = SCENE_LOSE;
     }
 }
 
@@ -183,7 +208,10 @@ Snake.prototype._select_next = function() {
     // only switch directions after we've started moving
     if(this._started) {
         var obj = OBJECTS[this._prev.x][this._prev.y];
-        if(obj.active && obj.t == OBJT_BARRICADE) {
+        if(this._prev.x == APPLE.x && this._prev.y == APPLE.y) {
+            hit_apple();
+        }
+        else if(obj.active && obj.t == OBJT_BARRICADE) {
             this._last_object.x = this._prev.x;
             this._last_object.y = this._prev.y;
             this.direction = obj.dir;
@@ -315,7 +343,7 @@ Snake.prototype.update = function(dt) {
 
     // if we've reached the next position, check for out-of-bounds and
     // select the next position if the snake is still in-bounds (otherwise
-    // kill it)
+    // kill it).
     if(this.headx == nx && this.heady == ny) {
         if(this._next.x <= 0 || this._next.x >= BOARD_DIM[0]
             || this._next.y  <= 0 || this._next.y >= BOARD_DIM[1])
@@ -393,6 +421,10 @@ function add_barricade(dir_pointing) {
     if(SELECTED_COORDS.x < 0 || SELECTED_COORDS.y < 0) {
         return;
     }
+    if(SCORE <= BARRICADE_POINTS) {
+        return;
+    }
+    SCORE -= BARRICADE_POINTS;
     var obj = OBJECTS[SELECTED_COORDS.x][SELECTED_COORDS.y];
     var x, y;
     x = SELECTED_COORDS.x * BOARD_SEP + BOARD_LINE_OFFSET;
@@ -408,6 +440,10 @@ function add_kill_trap() {
     if(SELECTED_COORDS.x < 0 || SELECTED_COORDS.y < 0) {
         return;
     }
+    if(SCORE <= KILL_TRAP_POINTS) {
+        return;
+    }
+    SCORE -= KILL_TRAP_POINTS;
     var obj = OBJECTS[SELECTED_COORDS.x][SELECTED_COORDS.y];
     var x, y;
     x = SELECTED_COORDS.x * BOARD_SEP + BOARD_LINE_OFFSET;
@@ -486,6 +522,7 @@ function update(dt) {
         maxy = BOARD_DIM[1]-2;
         APPLE.x = randIntBetween(maxx, minx);
         APPLE.y = randIntBetween(maxy, miny);
+        APPLE.health = APPLE_BASE_HEALTH;
         APPLE.visible = true;
     }
 
@@ -630,7 +667,15 @@ function drawMouseHighlight() {
 
 function drawApple() {
     if(!APPLE.visible) {return;}
-    ctx.fillStyle = APPLE.color;
+    if(APPLE.health > 0 && APPLE.health < APPLE_BASE_HEALTH) {
+        ctx.fillStyle = APPLE.colors[APPLE.health-1];
+    }
+    else if(APPLE.health < 1) {
+        ctx.fillStyle = APPLE.colors[0];
+    }
+    else {
+        ctx.fillStyle = APPLE.colors[APPLE.colors.length-1];
+    }
     ctx.beginPath();
     ctx.arc(APPLE.x*BOARD_SEP+BOARD_LINE_OFFSET, APPLE.y*BOARD_SEP+BOARD_LINE_OFFSET, APPLE.radius, 0, 2 * Math.PI, false);
     ctx.closePath();
@@ -724,10 +769,11 @@ function loop() {
 
 function reset_game() {
     deactivate_all_snakes()
-
     put_snake_in_play();
 
-    SCORE = 0;
+    APPLE.visible = false;
+
+    SCORE = SCORE_STARTING;
     ACTIVE_SCENE = SCENE_PLAY;
 }
 
