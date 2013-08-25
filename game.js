@@ -97,7 +97,8 @@ var OBJT_BARRICADE = 0;
 var OBJT_KILL_TRAP = 1;
 var SCENE_PLAY = 0;
 var SCENE_LOSE = 1;
-var ACTIVE_SCENE = SCENE_LOSE;
+var SCENE_TITLE = 2;
+var ACTIVE_SCENE = SCENE_TITLE;
 var LOSE_TXT_POS = [
     // start
     ((BOARD_DIM[0] * BOARD_SEP) / 2) - 144,
@@ -112,6 +113,20 @@ var LOSE_TXT_POS = [
 ];
 var LOSE_TXT_TWEEN = 0;
 var LOSE_TXT_TWEEN_DOWN = true;
+var TITLE_TXT_POS = [
+    // start
+    ((BOARD_DIM[0] * BOARD_SEP) / 2) - 70,
+    ((BOARD_DIM[1] * BOARD_SEP) / 2),
+
+    // end
+    ((BOARD_DIM[0] * BOARD_SEP) / 2) - 69,
+    ((BOARD_DIM[1] * BOARD_SEP) / 2) + 10,
+
+    // cur
+    -1, -1
+];
+var TITLE_TXT_TWEEN = 0;
+var TITLE_TXT_TWEEN_DOWN = true;
 var FINAL_SCORE = -1;
 var SCORE_STARTING = 10;
 var SCORE = SCORE_STARTING;
@@ -578,6 +593,20 @@ function update_lose(dt) {
     LOSE_TXT_TWEEN += dt;
 }
 
+function update_title(dt) {
+    if(TITLE_TXT_TWEEN_DOWN) {
+        TITLE_TXT_POS[4] = linearTween(TITLE_TXT_TWEEN, TITLE_TXT_POS[0], TITLE_TXT_POS[2]-TITLE_TXT_POS[0], 800);
+        TITLE_TXT_POS[5] = linearTween(TITLE_TXT_TWEEN, TITLE_TXT_POS[1], TITLE_TXT_POS[3]-TITLE_TXT_POS[1], 800);
+        if(TITLE_TXT_POS[4] > TITLE_TXT_POS[2]) { TITLE_TXT_TWEEN_DOWN = false; TITLE_TXT_TWEEN = 0; }
+    }
+    else {
+        TITLE_TXT_POS[4] = linearTween(TITLE_TXT_TWEEN, TITLE_TXT_POS[2], TITLE_TXT_POS[0]-TITLE_TXT_POS[2], 800);
+        TITLE_TXT_POS[5] = linearTween(TITLE_TXT_TWEEN, TITLE_TXT_POS[3], TITLE_TXT_POS[1]-TITLE_TXT_POS[3], 800);
+        if(TITLE_TXT_POS[4] < TITLE_TXT_POS[0]) { TITLE_TXT_TWEEN_DOWN = true; TITLE_TXT_TWEEN = 0; }
+    }
+    TITLE_TXT_TWEEN += dt;
+}
+
 
 function drawBarricade(dir_pointing, cx, cy, obj) {
     var fill = obj.health > Math.floor(BARRICADE_HEALTH / 2)
@@ -762,6 +791,35 @@ function render_lose() {
     ctx.fillText("press 'r' to play again", 10, 53);
 }
 
+function render_title() {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    ctx.fillStyle = '#eee';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var title_txt = "GRID TEN";
+    ctx.font = "30px sans-serif";
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillText(title_txt, TITLE_TXT_POS[2], TITLE_TXT_POS[3]);
+
+    ctx.strokeStyle = '#3a3';
+    ctx.lineWidth = 4;
+    ctx.strokeText(title_txt, TITLE_TXT_POS[4], TITLE_TXT_POS[5]);
+    ctx.fillStyle = 'white';
+    ctx.fillText(title_txt, TITLE_TXT_POS[4], TITLE_TXT_POS[5])
+
+    ctx.font = "16px monospace";
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    var x = ((BOARD_DIM[0] * BOARD_SEP) / 2) - 110;
+    var y = ((BOARD_DIM[1] * BOARD_SEP) / 2) + 50;
+    ctx.fillText("press 'enter' to start", x+1, y+1);
+    ctx.fillStyle = '#aaa';
+    ctx.fillText("press 'enter' to start", x, y);
+}
+
 
 function loop() {
     window.requestAnimationFrame(loop);
@@ -775,12 +833,18 @@ function loop() {
         else if(ACTIVE_SCENE == SCENE_LOSE) {
             update_lose(TIME_STEP);
         }
+        else if(ACTIVE_SCENE == SCENE_TITLE) {
+            update_title(TIME_STEP);
+        }
     }
     if(ACTIVE_SCENE == SCENE_PLAY) {
         render();
     }
     else if(ACTIVE_SCENE == SCENE_LOSE) {
         render_lose();
+    }
+    else if(ACTIVE_SCENE == SCENE_TITLE) {
+        render_title();
     }
 }
 
@@ -791,40 +855,57 @@ function reset_game() {
 
     APPLE.visible = false;
 
+
+    SCORE_TIMER = 0;
     SCORE = SCORE_STARTING;
+    SNAKE_SPAWN_TIMER = 0;
+    SNAKE_SPAWN_RATE = 1;
+    SNAKE_SPAWN_RATE_TIMER = 0;
     ACTIVE_SCENE = SCENE_PLAY;
 }
 
 
 // handle user keyboard input
 document.addEventListener('keydown', function(ev) {
-    // '1', 'w', up arrow
-    if(ev.keyCode == 49 || ev.keyCode == 87 || ev.keyCode == 38) {
-        add_barricade(NORTH);
+    if(ACTIVE_SCENE != SCENE_TITLE) {
+        // '1', 'w', up arrow
+        if(ev.keyCode == 49 || ev.keyCode == 87 || ev.keyCode == 38) {
+            add_barricade(NORTH);
+        }
+        // '2', 'd', right arrow
+        else if(ev.keyCode == 50 || ev.keyCode == 68 || ev.keyCode == 39) {
+            add_barricade(EAST);
+        }
+        // '3', 's', down arrow
+        else if(ev.keyCode == 51 || ev.keyCode == 83 || ev.keyCode == 40) {
+            add_barricade(SOUTH);
+        }
+        // '4', 'a', left arrow
+        else if(ev.keyCode == 52 || ev.keyCode == 65 || ev.keyCode == 37) {
+            add_barricade(WEST);
+        }
+        // 'r'
+        else if(ev.keyCode == 82) {
+            reset_game();
+        }
+        // '5', 'q', '/'
+        else if(ev.keyCode == 53 || ev.keyCode == 81 || ev.keyCode == 191) {
+            add_kill_trap();
+        }
+        // 'escape'
+        else if(ev.keyCode == 27) {
+            ACTIVE_SCENE = SCENE_TITLE;
+        }
     }
-    // '2', 'd', right arrow
-    else if(ev.keyCode == 50 || ev.keyCode == 68 || ev.keyCode == 39) {
-        add_barricade(EAST);
-    }
-    // '3', 's', down arrow
-    else if(ev.keyCode == 51 || ev.keyCode == 83 || ev.keyCode == 40) {
-        add_barricade(SOUTH);
-    }
-    // '4', 'a', left arrow
-    else if(ev.keyCode == 52 || ev.keyCode == 65 || ev.keyCode == 37) {
-        add_barricade(WEST);
-    }
-    // 'r'
-    else if(ev.keyCode == 82) {
-        reset_game();
+    else {
+        // 'enter'
+        if(ev.keyCode == 13) {
+            reset_game();
+        }
     }
     // 'm'
-    else if(ev.keyCode == 77) {
+    if(ev.keyCode == 77) {
         mute_game();
-    }
-    // '5', 'q', '/'
-    else if(ev.keyCode == 53 || ev.keyCode == 81 || ev.keyCode == 191) {
-        add_kill_trap();
     }
 });
 
