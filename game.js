@@ -212,7 +212,7 @@ Snake.prototype.reset = function() {
     this.heady = -1; // pixel coordinate
     this.direction = -1;
     this.headradius = 5;
-    if(Math.random() > .8) { // 1 in 5 snakes will move at a variable speed
+    if(Math.random() >= .9) { // 1 in 5 snakes will move at a variable speed
         this.speed = randIntBetween(SNAKE_SPEED_MAX, SNAKE_SPEED_MIN);
         this.color = '#f05';
     }
