@@ -216,6 +216,10 @@ Snake.prototype._select_next = function() {
 
     this._direction_log.push(this.direction);
 };
+Snake.prototype.kill = function() {
+    this.enabled = false;
+    this.active = false;
+}
 Snake.prototype.update = function(dt) {
     // do we have a next selected position? if not, select one.
     if(this._next.x < 0 || this._next.y < 0) {
@@ -241,13 +245,22 @@ Snake.prototype.update = function(dt) {
     else if(this.direction == SOUTH && ny < this.heady) {this.heady = ny;}
     else if(this.direction == WEST && nx > this.headx) {this.headx = nx;}
 
-    // if we've reached the next position, select the next position
+    // if we've reached the next position, check for out-of-bounds and
+    // select the next position if the snake is still in-bounds (otherwise
+    // kill it)
     if(this.headx == nx && this.heady == ny) {
-        this._prev.x = this._next.x;
-        this._prev.y = this._next.y;
-        this._select_next();
-        if(this.direction != this._direction_log[this._direction_log.length-2]) {
-            window.sound_snake_move.play();
+        if(this._next.x <= 0 || this._next.x >= BOARD_DIM[0]
+            || this._next.y  <= 0 || this._next.y >= BOARD_DIM[1])
+        {
+            this.kill();
+        }
+        else {
+            this._prev.x = this._next.x;
+            this._prev.y = this._next.y;
+            this._select_next();
+            if(this.direction != this._direction_log[this._direction_log.length-2]) {
+                window.sound_snake_move.play();
+            }
         }
     }
 };
