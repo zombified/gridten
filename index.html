@@ -19,30 +19,31 @@
     </head>
     <body>
         <canvas id='gameboard'></canvas>
+        <div>
+            Objects
+            <ul>
+                <li><em>force go up:</em> 1, w, up arrow</li>
+                <li><em>force go right:</em> 2, w, up arrow</li>
+                <li><em>force go down:</em> 3, w, up arrow</li>
+                <li><em>force go left:</em> 4, w, up arrow</li>
+            </ul>
+        </div>
         <ul>
-            <li><em>force go up:</em> 1, w, up key</li>
-            <li><em>force go right:</em> 2, w, up key</li>
-            <li><em>force go down:</em> 3, w, up key</li>
-            <li><em>force go left:</em> 4, w, up key</li>
+            <li><em><a class='mute' id='mutebutton' href='void:javascript(0)'>Mute</a></em> 'm'</li>
+            <li><em>reset the game:</em> 'r'</li>
         </ul>
-        <ul>
-            <li><a class='mute' id='mutebutton' href='void:javascript(0)'>Mute</a></li>
-        </ul>
+        <div>
+            Some rules:
+            <ul>
+                <li>Click on an intersection to activate it, then click a key for an object to add it.</li>
+                <li>If the cyan dots are forced to the edge of the board, they die</li>
+                <li>Every 10 seconds, your score goes up. It also goes up (just a little bit) when a cyan dot dies</li>
+            </ul>
+        </div>
         <script type='text/javascript' src='game.js'></script>
         <script type='text/javascript'>
             var mutebutton = document.getElementById('mutebutton');
-            mutebutton.addEventListener('click', function(ev) {
-                if(mutebutton.className == 'mute') {
-                    mutebutton.className = 'unmute';
-                    mutebutton.innerHTML = 'Unmute';
-                    Howler.mute();
-                }
-                else {
-                    mutebutton.className = 'mute';
-                    mutebutton.innerHTML = 'Mute';
-                    Howler.unmute();
-                }
-            });
+            mutebutton.addEventListener('click', mute_game);
         </script>
     </body>
 </html>

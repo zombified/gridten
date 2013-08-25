@@ -4,6 +4,18 @@
 // MIT license
 (function(){var lastTime=0;var vendors=['ms','moz','webkit','o'];for(var x=0;x<vendors.length&&!window.requestAnimationFrame;++x){window.requestAnimationFrame=window[vendors[x]+'RequestAnimationFrame'];window.cancelAnimationFrame=window[vendors[x]+'CancelAnimationFrame']||window[vendors[x]+'CancelRequestAnimationFrame'];}if(!window.requestAnimationFrame){window.requestAnimationFrame=function(callback,element){var currTime = new Date().getTime();var timeToCall=Math.max(0,16-(currTime-lastTime));var id=window.setTimeout(function(){callback(currTime+timeToCall);},timeToCall);lastTime=currTime+timeToCall;return id;};}if(!window.cancelAnimationFrame){window.cancelAnimationFrame=function(id){clearTimeout(id);};}}());
 
+function mute_game(ev) {
+    if(mutebutton.className == 'mute') {
+        mutebutton.className = 'unmute';
+        mutebutton.innerHTML = 'Unmute';
+        Howler.mute();
+    }
+    else {
+        mutebutton.className = 'mute';
+        mutebutton.innerHTML = 'Mute';
+        Howler.unmute();
+    }
+}
 
 (function(){
 
@@ -75,6 +87,7 @@ var LOSE_TXT_POS = [
 var LOSE_TXT_TWEEN = 0;
 var LOSE_TXT_TWEEN_DOWN = true;
 var SCORE = 0;
+var SCORE_TIMER = 0;
 
 
 var canvas = document.getElementById('gameboard');
@@ -115,9 +128,18 @@ function hit_barricade(obj) {
 
 function each_active_enabled_snake(func) {
     for(var i = 0; i < SNAKE_POOL.length; i++) {
-        func(SNAKE_POOL[i]);
+        if(SNAKE_POOL[i].active && SNAKE_POOL[i].enabled) {
+            func(SNAKE_POOL[i]);
+        }
     }
 }
+
+function deactivate_all_snakes() {
+    for(var i = 0; i < SNAKE_POOL.length; i++) {
+        SNAKE_POOL[i].active = false;
+    }
+}
+
 
 
 function Snake() {
@@ -557,6 +579,13 @@ function drawApple() {
     ctx.fill();
 }
 
+function drawScore() {
+    ctx.font = "10px monospace";
+    ctx.fillStyle = 'rgba(255, 102, 0, 0.8)';
+    ctx.fillText("score: " + SCORE, 6.5, 11);
+}
+
+
 function render() {
     // clear the canvas
     ctx.save();
@@ -573,6 +602,7 @@ function render() {
     drawObjects();
     drawMouseHighlight();
     drawApple();
+    drawScore();
 
     var snake;
     for(var i = 0; i < SNAKE_POOL.length; i++) {
@@ -633,10 +663,19 @@ function loop() {
     }
 }
 
-put_snake_in_play();
-put_snake_in_play();
-put_snake_in_play();
-put_snake_in_play();
+
+function reset_game() {
+    deactivate_all_snakes()
+
+    put_snake_in_play();
+    put_snake_in_play();
+    put_snake_in_play();
+    put_snake_in_play();
+
+    SCORE = 0;
+    ACTIVE_SCENE = SCENE_PLAY;
+}
+
 
 // handle user keyboard input
 document.addEventListener('keydown', function(ev) {
@@ -656,7 +695,17 @@ document.addEventListener('keydown', function(ev) {
     else if(ev.keyCode == 52 || ev.keyCode == 65 || ev.keyCode == 37) {
         add_barricade(WEST);
     }
+    // 'r'
+    else if(ev.keyCode == 82) {
+        reset_game();
+    }
+    // 'm'
+    else if(ev.keyCode == 77) {
+        mute_game();
+    }
 });
+
+
 
 // generate object positions for every position on the board
 var col;
