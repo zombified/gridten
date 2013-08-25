@@ -22,6 +22,24 @@
             <li><em>force go down:</em> 3, w, up key</li>
             <li><em>force go left:</em> 4, w, up key</li>
         </ul>
+        <ul>
+            <li><a class='mute' id='mutebutton' href='void:javascript(0)'>Mute</a></li>
+        </ul>
         <script type='text/javascript' src='game.js'></script>
+        <script type='text/javascript'>
+            var mutebutton = document.getElementById('mutebutton');
+            mutebutton.addEventListener('click', function(ev) {
+                if(mutebutton.className == 'mute') {
+                    mutebutton.className = 'unmute';
+                    mutebutton.innerHTML = 'Unmute';
+                    Howler.mute();
+                }
+                else {
+                    mutebutton.className = 'mute';
+                    mutebutton.innerHTML = 'Mute';
+                    Howler.unmute();
+                }
+            });
+        </script>
     </body>
 </html>
