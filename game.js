@@ -55,6 +55,10 @@ var SNAKE_SEG_POOL = [];
 var SNAKE_MIN_LENGTH = 1;
 var SNAKE_MAX_LENGTH = 5;
 var SNAKE_SPEED = 40;
+var SNAKE_SPAWN_TIMER = 0;
+var SNAKE_SPAWN_IN_MAX = 15000;
+var SNAKE_SPAWN_IN_MIN = 8000
+var SNAKE_SPAWN_IN = randIntBetween(SNAKE_SPAWN_IN_MAX, SNAKE_SPAWN_IN_MIN);
 var NORTH = 0;
 var EAST = 1;
 var SOUTH = 2;
@@ -476,6 +480,13 @@ function update(dt) {
         SCORE += 10;
         SCORE_TIMER = 0;
     }
+
+    SNAKE_SPAWN_TIMER += dt;
+    if(SNAKE_SPAWN_TIMER > SNAKE_SPAWN_IN) {
+        put_snake_in_play();
+        SNAKE_SPAWN_IN = randIntBetween(SNAKE_SPAWN_IN_MAX, SNAKE_SPAWN_IN_MIN);
+        SNAKE_SPAWN_TIMER = 0;
+    }
 }
 
 function update_lose(dt) {
@@ -674,9 +685,6 @@ function loop() {
 function reset_game() {
     deactivate_all_snakes()
 
-    put_snake_in_play();
-    put_snake_in_play();
-    put_snake_in_play();
     put_snake_in_play();
 
     SCORE = 0;
