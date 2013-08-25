@@ -70,9 +70,12 @@ var SOUTHWEST = 7;
 var BARRICADE_SIZE = 8;
 var BARRICADE_COLOR = '#aaa';
 var BARRICADE_HEALTH = 2;
+var KILL_TRAP_SIZE = 8;
+var KILL_TRAP_COLOR = '#aaa';
 var OBJECTS = [];
 var OBJT_NONE = -1;
 var OBJT_BARRICADE = 0;
+var OBJT_KILL_TRAP = 1;
 var SCENE_PLAY = 0;
 var SCENE_LOSE = 1;
 var ACTIVE_SCENE = SCENE_LOSE;
@@ -185,6 +188,11 @@ Snake.prototype._select_next = function() {
             this._last_object.y = this._prev.y;
             this.direction = obj.dir;
             hit_barricade(obj);
+        }
+        else if(obj.active && obj.t == OBJT_KILL_TRAP) {
+            window.sound_kill_trap_kills.play();
+            this.kill();
+            obj.active = false;
         }
         else {
             var ax = APPLE.x * BOARD_SEP + BOARD_LINE_OFFSET;
@@ -396,6 +404,19 @@ function add_barricade(dir_pointing) {
     obj.health = BARRICADE_HEALTH;
 }
 
+function add_kill_trap() {
+    if(SELECTED_COORDS.x < 0 || SELECTED_COORDS.y < 0) {
+        return;
+    }
+    var obj = OBJECTS[SELECTED_COORDS.x][SELECTED_COORDS.y];
+    var x, y;
+    x = SELECTED_COORDS.x * BOARD_SEP + BOARD_LINE_OFFSET;
+    y = SELECTED_COORDS.y * BOARD_SEP + BOARD_LINE_OFFSET;
+    obj.render = function(){drawKillTrap(x, y);};
+    obj.active = true;
+    obj.t = OBJT_KILL_TRAP;
+}
+
 
 
 function calcRelCoords(ev) {
@@ -540,6 +561,22 @@ function drawBarricade(dir_pointing, cx, cy, obj) {
     ctx.closePath();
     if(fill) {ctx.fill();}
     else {ctx.stroke();}
+}
+
+function drawKillTrap(cx, cy, obj) {
+    var minx = cx-KILL_TRAP_SIZE;
+    var maxx = cx+KILL_TRAP_SIZE;
+    var miny = cy-KILL_TRAP_SIZE;
+    var maxy = cy+KILL_TRAP_SIZE;
+    ctx.fillStyle = KILL_TRAP_COLOR;
+    ctx.beginPath();
+    ctx.moveTo(minx, miny);
+    ctx.lineTo(maxx, miny);
+    ctx.lineTo(maxx, maxy);
+    ctx.lineTo(minx, maxy);
+    ctx.lineTo(minx, miny);
+    ctx.closePath();
+    ctx.fill();
 }
 
 function drawObjects() {
@@ -720,6 +757,10 @@ document.addEventListener('keydown', function(ev) {
     // 'm'
     else if(ev.keyCode == 77) {
         mute_game();
+    }
+    // '5', 'q', '/'
+    else if(ev.keyCode == 53 || ev.keyCode == 81 || ev.keyCode == 191) {
+        add_kill_trap();
     }
 });
 
