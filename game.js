@@ -72,6 +72,10 @@ var SNAKE_SPAWN_TIMER = 0;
 var SNAKE_SPAWN_IN_MAX = 15000;
 var SNAKE_SPAWN_IN_MIN = 8000
 var SNAKE_SPAWN_IN = randIntBetween(SNAKE_SPAWN_IN_MAX, SNAKE_SPAWN_IN_MIN);
+var SNAKE_SPAWN_RATE = 1;
+var SNAKE_SPAWN_RATE_TIMER = 0;
+var SNAKE_SPAWN_INC_RATE = 1
+var SNAKE_SPAWN_INC_RATE_EVERY = 30000;
 var NORTH = 0;
 var EAST = 1;
 var SOUTH = 2;
@@ -150,7 +154,7 @@ function hit_barricade(obj) {
 }
 
 function hit_apple() {
-    SCORE -= 2;
+    SCORE -= 5;
     APPLE.health -= 1;
 
     if(APPLE.health <= 0) {
@@ -541,9 +545,17 @@ function update(dt) {
 
     SNAKE_SPAWN_TIMER += dt;
     if(SNAKE_SPAWN_TIMER > SNAKE_SPAWN_IN) {
-        put_snake_in_play();
+        for(var i = 0; i < SNAKE_SPAWN_RATE; i++) {
+            put_snake_in_play();
+        }
         SNAKE_SPAWN_IN = randIntBetween(SNAKE_SPAWN_IN_MAX, SNAKE_SPAWN_IN_MIN);
         SNAKE_SPAWN_TIMER = 0;
+    }
+
+    SNAKE_SPAWN_RATE_TIMER += dt;
+    if(SNAKE_SPAWN_RATE_TIMER > SNAKE_SPAWN_INC_RATE_EVERY) {
+        SNAKE_SPAWN_RATE += SNAKE_SPAWN_INC_RATE;
+        SNAKE_SPAWN_RATE_TIMER = 0;
     }
 }
 
