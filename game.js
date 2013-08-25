@@ -76,6 +76,9 @@ function hit_barricade(obj) {
     if(obj.health <= 0) {
         obj.active = false;
     }
+    if(window.sound_hit_object !== false) {
+        window.sound_hit_object.play();
+    }
 }
 
 
@@ -230,6 +233,9 @@ Snake.prototype.update = function(dt) {
         this._prev.x = this._next.x;
         this._prev.y = this._next.y;
         this._select_next();
+        if(this.direction != this._direction_log[this._direction_log.length-2]) {
+            window.sound_snake_move.play();
+        }
     }
 };
 Snake.prototype.draw = function() {
@@ -501,11 +507,6 @@ function render() {
         if(!snake.active || !snake.enabled) {continue;}
         snake.draw();
     }
-
-    //drawBarricade(NORTH, 2*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
-    //drawBarricade(EAST, 3*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
-    //drawBarricade(SOUTH, 4*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
-    //drawBarricade(WEST, 5*BOARD_SEP+BOARD_LINE_OFFSET, 2*BOARD_SEP+BOARD_LINE_OFFSET);
 }
 
 
@@ -521,19 +522,26 @@ function loop() {
 }
 
 put_snake_in_play();
+put_snake_in_play();
+put_snake_in_play();
+put_snake_in_play();
 
 // handle user keyboard input
 document.addEventListener('keydown', function(ev) {
-    if(ev.keyCode == 49) { // '1'
+    // '1', 'w', up arrow
+    if(ev.keyCode == 49 || ev.keyCode == 87 || ev.keyCode == 38) {
         add_barricade(NORTH);
     }
-    else if(ev.keyCode == 50) { // '2'
+    // '2', 'd', right arrow
+    else if(ev.keyCode == 50 || ev.keyCode == 68 || ev.keyCode == 39) {
         add_barricade(EAST);
     }
-    else if(ev.keyCode == 51) { // '3'
+    // '3', 's', down arrow
+    else if(ev.keyCode == 51 || ev.keyCode == 83 || ev.keyCode == 40) {
         add_barricade(SOUTH);
     }
-    else if(ev.keyCode == 52) { // '4'
+    // '4', 'a', left arrow
+    else if(ev.keyCode == 52 || ev.keyCode == 65 || ev.keyCode == 37) {
         add_barricade(WEST);
     }
 });

@@ -1,9 +1,27 @@
 <html>
     <head>
         <title>LD48#27</title>
+        <script type='text/javascript' src='media/howler.min.js'></script>
+        <script type='text/javascript'>
+            window.sound_hit_object = new Howl({
+                urls: ['media/Hit_Hurt.mp3', 'media/Hit_Hurt.ogg', 'media/Hit_Hurt.wav']
+            });
+            window.sound_hit_apple = new Howl({
+                urls: ['media/Explosion4.mp3', 'media/Explosion4.ogg', 'media/Explosion4.wav']
+            });
+            window.sound_snake_move = new Howl({
+                urls: ['media/Blip_Select5.mp3', 'media/Blip_Select5.ogg', 'media/Blip_Select5.wav']
+            });
+        </script>
     </head>
     <body>
         <canvas id='gameboard'></canvas>
+        <ul>
+            <li><em>force go up:</em> 1, w, up key</li>
+            <li><em>force go right:</em> 2, w, up key</li>
+            <li><em>force go down:</em> 3, w, up key</li>
+            <li><em>force go left:</em> 4, w, up key</li>
+        </ul>
         <script type='text/javascript' src='game.js'></script>
     </body>
 </html>
