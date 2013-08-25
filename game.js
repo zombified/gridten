@@ -81,6 +81,12 @@ function hit_barricade(obj) {
     }
 }
 
+function each_active_enabled_snake(func) {
+    for(var i = 0; i < SNAKE_POOL.length; i++) {
+        func(SNAKE_POOL[i]);
+    }
+}
+
 
 function Snake() {
     this._prev = {x:-1, y:-1}; // board coords
@@ -155,33 +161,40 @@ Snake.prototype._select_next = function() {
             if(ay > this.heady) { weights[SOUTH] += 1; weights[NORTH] -= 2; }
             else if(ay < this.heady) { weights[NORTH] += 1; weights[SOUTH] -= 2; }
 
-            // weight against going towards a location with a remembered object
+            // weight against going towards a location with a remembered object,
+            // or to a location with another snake in it
             var rx = this._get_x_in(NORTH);
             var ry = this._get_y_in(NORTH);
             if(rx == this._last_object.x && ry == this._last_object.y) {
                 weights[NORTH] -= 1;
             }
-            else {
-                rx = this._get_x_in(EAST);
-                ry = this._get_y_in(EAST);
-                if(rx == this._last_object.x && ry == this._last_object.y) {
-                    weights[EAST] -= 1;
-                }
-                else {
-                    rx = this._get_x_in(SOUTH);
-                    ry = this._get_y_in(SOUTH);
-                    if(rx == this._last_object.x && ry == this._last_object.y) {
-                        weights[SOUTH] -= 1;
-                    }
-                    else {
-                        rx = this._get_x_in(WEST);
-                        ry = this._get_y_in(WEST);
-                        if(rx == this._last_object.x && ry == this._last_object.y) {
-                            weights[WEST] -= 1;
-                        }
-                    }
-                }
+            each_active_enabled_snake(function(snake) {
+                if(snake._next.x == rx && snake._next.y == ry){weights[NORTH] -= 5;}
+            });
+            rx = this._get_x_in(EAST);
+            ry = this._get_y_in(EAST);
+            if(rx == this._last_object.x && ry == this._last_object.y) {
+                weights[EAST] -= 1;
             }
+            each_active_enabled_snake(function(snake) {
+                if(snake._next.x == rx && snake._next.y == ry){weights[EAST] -= 5;}
+            });
+            rx = this._get_x_in(SOUTH);
+            ry = this._get_y_in(SOUTH);
+            if(rx == this._last_object.x && ry == this._last_object.y) {
+                weights[SOUTH] -= 1;
+            }
+            each_active_enabled_snake(function(snake) {
+                if(snake._next.x == rx && snake._next.y == ry){weights[SOUTH] -= 5;}
+            });
+            rx = this._get_x_in(WEST);
+            ry = this._get_y_in(WEST);
+            if(rx == this._last_object.x && ry == this._last_object.y) {
+                weights[WEST] -= 1;
+            }
+            each_active_enabled_snake(function(snake) {
+                if(snake._next.x == rx && snake._next.y == ry){weights[WEST] -= 5;}
+            });
 
             // select the direction based on the weights -- randomize selection between similar weights
             maxindex = 0;
