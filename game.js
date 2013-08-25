@@ -57,6 +57,24 @@ var BARRICADE_HEALTH = 2;
 var OBJECTS = [];
 var OBJT_NONE = -1;
 var OBJT_BARRICADE = 0;
+var SCENE_PLAY = 0;
+var SCENE_LOSE = 1;
+var ACTIVE_SCENE = SCENE_LOSE;
+var LOSE_TXT_POS = [
+    // start
+    ((BOARD_DIM[0] * BOARD_SEP) / 2) - 144,
+    ((BOARD_DIM[1] * BOARD_SEP) / 2),
+
+    // end
+    ((BOARD_DIM[0] * BOARD_SEP) / 2) - 139,
+    ((BOARD_DIM[1] * BOARD_SEP) / 2) + 10,
+
+    // cur
+    -1, -1
+];
+var LOSE_TXT_TWEEN = 0;
+var LOSE_TXT_TWEEN_DOWN = true;
+var SCORE = 0;
 
 
 var canvas = document.getElementById('gameboard');
@@ -68,6 +86,20 @@ canvas.height = BOARD_DIM[1] * BOARD_SEP;
 
 function randIntBetween(max, min) {
     return Math.floor(Math.random() * (max - min) + min);
+}
+
+// t: current time
+// b: start value
+// c: change in value
+// d: duration
+function linearTween(t, b, c, d) {
+    return c*t/d + b;
+}
+function quadInOutTween(t, b, c, d) {
+    t /= d/2;
+    if(t<1) { return c/2*t*t + b; }
+    t--;
+    return -c/2 * (t*(t-2) - 1) + b;
 }
 
 
@@ -219,6 +251,7 @@ Snake.prototype._select_next = function() {
 Snake.prototype.kill = function() {
     this.enabled = false;
     this.active = false;
+    window.sound_snake_dies.play();
 }
 Snake.prototype.update = function(dt) {
     // do we have a next selected position? if not, select one.
@@ -416,6 +449,20 @@ function update(dt) {
     }
 }
 
+function update_lose(dt) {
+    if(LOSE_TXT_TWEEN_DOWN) {
+        LOSE_TXT_POS[4] = linearTween(LOSE_TXT_TWEEN, LOSE_TXT_POS[0], LOSE_TXT_POS[2]-LOSE_TXT_POS[0], 800);
+        LOSE_TXT_POS[5] = linearTween(LOSE_TXT_TWEEN, LOSE_TXT_POS[1], LOSE_TXT_POS[3]-LOSE_TXT_POS[1], 800);
+        if(LOSE_TXT_POS[4] > LOSE_TXT_POS[2]) { LOSE_TXT_TWEEN_DOWN = false; LOSE_TXT_TWEEN = 0; }
+    }
+    else {
+        LOSE_TXT_POS[4] = linearTween(LOSE_TXT_TWEEN, LOSE_TXT_POS[2], LOSE_TXT_POS[0]-LOSE_TXT_POS[2], 800);
+        LOSE_TXT_POS[5] = linearTween(LOSE_TXT_TWEEN, LOSE_TXT_POS[3], LOSE_TXT_POS[1]-LOSE_TXT_POS[3], 800);
+        if(LOSE_TXT_POS[4] < LOSE_TXT_POS[0]) { LOSE_TXT_TWEEN_DOWN = true; LOSE_TXT_TWEEN = 0; }
+    }
+    LOSE_TXT_TWEEN += dt;
+}
+
 
 function drawBarricade(dir_pointing, cx, cy) {
     var minx = cx-BARRICADE_SIZE;
@@ -535,6 +582,35 @@ function render() {
     }
 }
 
+function render_lose() {
+    ctx.save();
+    ctx.setTransform(1, 0, 0, 1, 0, 0);
+    ctx.clearRect(0, 0, canvas.width, canvas.height);
+    ctx.restore();
+    ctx.fillStyle = '#eee';
+    ctx.fillRect(0, 0, canvas.width, canvas.height);
+
+    var lose_txt = "THE GAME IS OVER";
+    ctx.font = "30px sans-serif";
+
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.3)';
+    ctx.fillText(lose_txt, LOSE_TXT_POS[2], LOSE_TXT_POS[3]);
+
+    ctx.strokeStyle = '#a33';
+    ctx.lineWidth = 4;
+    ctx.strokeText(lose_txt, LOSE_TXT_POS[4], LOSE_TXT_POS[5]);
+    ctx.fillStyle = 'white';
+    ctx.fillText(lose_txt, LOSE_TXT_POS[4], LOSE_TXT_POS[5])
+
+    ctx.font = "16px monospace";
+    ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
+    ctx.fillText("final score: " + SCORE, 11, 31);
+    ctx.fillText("press 'r' to play again", 11, 54);
+    ctx.fillStyle = '#aaa';
+    ctx.fillText("final score: " + SCORE, 10, 30);
+    ctx.fillText("press 'r' to play again", 10, 53);
+}
+
 
 function loop() {
     window.requestAnimationFrame(loop);
@@ -542,9 +618,19 @@ function loop() {
     var real_time = getTimeStamp();
     while(SIM_TIME < real_time) {
         SIM_TIME += TIME_STEP;
-        update(TIME_STEP);
+        if(ACTIVE_SCENE == SCENE_PLAY) {
+            update(TIME_STEP);
+        }
+        else if(ACTIVE_SCENE == SCENE_LOSE) {
+            update_lose(TIME_STEP);
+        }
     }
-    render();
+    if(ACTIVE_SCENE == SCENE_PLAY) {
+        render();
+    }
+    else if(ACTIVE_SCENE == SCENE_LOSE) {
+        render_lose();
+    }
 }
 
 put_snake_in_play();
