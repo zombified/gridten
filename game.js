@@ -488,31 +488,17 @@ function add_kill_trap() {
 function calcRelCoords(ev) {
     var x, y;
 
-    // chrome
-    if(ev.offsetX !== undefined && ev.offsetY !== undefined){
-        x = ev.offsetX;
-        y = ev.offsetY;
+    if(ev.pageX || ev.pageY) {
+        x = ev.pageX;
+        y = ev.pageY;
     }
-    // ff
-    else if(ev.layerX !== undefined && ev.layerY !== undefined){
-        x = ev.layerX;
-        y = ev.layerY;
-    }
-    // gen solution
     else {
-        var toffx = 0;
-        var toffy = 0;
-        var curel = this;
-
-        do {
-            toffx = curel.offsetLeft - curel.scrollLeft;
-            toffy = curel.offsetTop - curel.scrollTop;
-        } while(curel = curel.offsetParent);
-
-        x = ev.pageX - toffx + document.body.scrollLeft;
-        y = ev.pageY - toffy + document.body.scrollTop;
+        x = ev.clientX + document.body.scrollLeft + document.documentElement.scrollLeft;
+        y = ev.clientY + document.body.scrollTop + document.documentElement.scrollTop;
     }
-    
+    x -= canvas.offsetLeft;
+    y -= canvas.offsetTop;
+
     MCOORDS.x = x;
     MCOORDS.y = y;
     MCLICK_HANDLED = false;
