@@ -68,6 +68,8 @@ var SNAKE_SEG_POOL = [];
 var SNAKE_MIN_LENGTH = 1;
 var SNAKE_MAX_LENGTH = 5;
 var SNAKE_SPEED = 40;
+var SNAKE_SPEED_MAX = 40;
+var SNAKE_SPEED_MIN = 20;
 var SNAKE_SPAWN_TIMER = 0;
 var SNAKE_SPAWN_IN_MAX = 15000;
 var SNAKE_SPAWN_IN_MIN = 8000
@@ -87,7 +89,7 @@ var SOUTHWEST = 7;
 var BARRICADE_SIZE = 8;
 var BARRICADE_COLOR = '#aaa';
 var BARRICADE_HEALTH = 2;
-var BARRICADE_POINTS = 3;
+var BARRICADE_POINTS = 1;
 var KILL_TRAP_SIZE = 8;
 var KILL_TRAP_COLOR = '#aaa';
 var KILL_TRAP_POINTS = 10;
@@ -209,9 +211,15 @@ Snake.prototype.reset = function() {
     this.headx = -1; // pixel coordinate
     this.heady = -1; // pixel coordinate
     this.direction = -1;
-    this.color = '#0ff';
     this.headradius = 5;
-    this.speed = SNAKE_SPEED;
+    if(Math.random() > .8) { // 1 in 5 snakes will move at a variable speed
+        this.speed = randIntBetween(SNAKE_SPEED_MAX, SNAKE_SPEED_MIN);
+        this.color = '#f05';
+    }
+    else {
+        this.speed = SNAKE_SPEED;
+        this.color = '#0ff';
+    }
     this.length = randIntBetween(SNAKE_MAX_LENGTH, SNAKE_MIN_LENGTH);
     this._prev.x = this._prev.y = this._next.x = this._next.y = -1;
     this._started = false;
