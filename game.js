@@ -73,6 +73,7 @@ function randIntBetween(max, min) {
 function Snake() {
     this._prev = {x:-1, y:-1}; // board coords
     this._next = {x:-1, y:-1}; // board coords
+    this._last_object = {x:-1, y:-1}; // board coords
     this._direction_log = [];
     this.reset();
 }
@@ -89,11 +90,23 @@ Snake.prototype.reset = function() {
     this._prev.x = this._prev.y = this._next.x = this._next.y = -1;
     this._started = false;
 };
+Snake.prototype._get_x_in = function(direction) {
+    if(direction === EAST) {return this._prev.x + 1;}
+    else if(direction === WEST) {return this._prev.x - 1;}
+    return this._prev.x;
+};
+Snake.prototype._get_y_in = function(direction) {
+    if(direction === NORTH) {return this._prev.y-1;}
+    else if(direction === SOUTH) {return this._prev.y+1;}
+    return this._prev.y;
+};
 Snake.prototype._select_next = function() {
     // only switch directions after we've started moving
     if(this._started) {
         var obj = OBJECTS[this._prev.x][this._prev.y];
         if(obj.t == OBJT_BARRICADE) {
+            this._last_object.x = this._prev.x;
+            this._last_object.y = this._prev.y;
             this.direction = obj.dir;
         }
         else {
@@ -129,8 +142,35 @@ Snake.prototype._select_next = function() {
             if(ay > this.heady) { weights[SOUTH] += 1; weights[NORTH] -= 2; }
             else if(ay < this.heady) { weights[NORTH] += 1; weights[SOUTH] -= 2; }
 
+            // weight against going towards a location with a remembered object
+            var rx = this._get_x_in(NORTH);
+            var ry = this._get_y_in(NORTH);
+            if(rx == this._last_object.x && ry == this._last_object.y) {
+                weights[NORTH] -= 1;
+            }
+            else {
+                rx = this._get_x_in(EAST);
+                ry = this._get_y_in(EAST);
+                if(rx == this._last_object.x && ry == this._last_object.y) {
+                    weights[EAST] -= 1;
+                }
+                else {
+                    rx = this._get_x_in(SOUTH);
+                    ry = this._get_y_in(SOUTH);
+                    if(rx == this._last_object.x && ry == this._last_object.y) {
+                        weights[SOUTH] -= 1;
+                    }
+                    else {
+                        rx = this._get_x_in(WEST);
+                        ry = this._get_y_in(WEST);
+                        if(rx == this._last_object.x && ry == this._last_object.y) {
+                            weights[WEST] -= 1;
+                        }
+                    }
+                }
+            }
 
-            // select the direction based on the weights
+            // select the direction based on the weights -- randomize selection between similar weights
             maxindex = 0;
             if(weights[EAST] > weights[maxindex]) {maxindex = EAST;}
             else if(weights[EAST] == weights[maxindex]) { maxindex = (Math.random() > .5) ? EAST : maxindex; }
@@ -145,23 +185,8 @@ Snake.prototype._select_next = function() {
         }
     }
     this._started = true;
-
-    if(this.direction == NORTH) {
-        this._next.x = this._prev.x;
-        this._next.y = this._prev.y - 1;
-    }
-    else if(this.direction == EAST) {
-        this._next.x = this._prev.x + 1;
-        this._next.y = this._prev.y;
-    }
-    else if(this.direction == SOUTH) {
-        this._next.x = this._prev.x;
-        this._next.y = this._prev.y + 1;
-    }
-    else if(this.direction == WEST) {
-        this._next.x = this._prev.x - 1;
-        this._next.y = this._prev.y;
-    }
+    this._next.x = this._get_x_in(this.direction);
+    this._next.y = this._get_y_in(this.direction);
 
     this._direction_log.push(this.direction);
 };
