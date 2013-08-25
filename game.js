@@ -273,6 +273,7 @@ Snake.prototype._select_next = function() {
 Snake.prototype.kill = function() {
     this.enabled = false;
     this.active = false;
+    SCORE += 1;
     window.sound_snake_dies.play();
 }
 Snake.prototype.update = function(dt) {
@@ -468,6 +469,12 @@ function update(dt) {
         snake = SNAKE_POOL[i];
         if(!snake.active || !snake.enabled) {continue;}
         snake.update(dt);
+    }
+
+    SCORE_TIMER += dt;
+    if(SCORE_TIMER > 10000) {
+        SCORE += 10;
+        SCORE_TIMER = 0;
     }
 }
 
@@ -716,6 +723,8 @@ for(var x = 0; x < BOARD_DIM[0]; x++) {
         col.push({t:OBJT_NONE, active:false, render:-1});
     }
 }
+
+mute_game();
 
 SIM_TIME = getTimeStamp();
 loop();
