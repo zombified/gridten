@@ -53,6 +53,7 @@ var SOUTHEAST = 6;
 var SOUTHWEST = 7;
 var BARRICADE_SIZE = 8;
 var BARRICADE_COLOR = '#aaa';
+var BARRICADE_HEALTH = 2;
 var OBJECTS = [];
 var OBJT_NONE = -1;
 var OBJT_BARRICADE = 0;
@@ -67,6 +68,14 @@ canvas.height = BOARD_DIM[1] * BOARD_SEP;
 
 function randIntBetween(max, min) {
     return Math.floor(Math.random() * (max - min) + min);
+}
+
+
+function hit_barricade(obj) {
+    obj.health -= 1;
+    if(obj.health <= 0) {
+        obj.active = false;
+    }
 }
 
 
@@ -104,10 +113,11 @@ Snake.prototype._select_next = function() {
     // only switch directions after we've started moving
     if(this._started) {
         var obj = OBJECTS[this._prev.x][this._prev.y];
-        if(obj.t == OBJT_BARRICADE) {
+        if(obj.active && obj.t == OBJT_BARRICADE) {
             this._last_object.x = this._prev.x;
             this._last_object.y = this._prev.y;
             this.direction = obj.dir;
+            hit_barricade(obj);
         }
         else {
             var ax = APPLE.x * BOARD_SEP + BOARD_LINE_OFFSET;
@@ -291,6 +301,7 @@ function add_barricade(dir_pointing) {
     obj.active = true;
     obj.t = OBJT_BARRICADE;
     obj.dir = dir_pointing;
+    obj.health = BARRICADE_HEALTH;
 }
 
 
