@@ -112,9 +112,11 @@ var LOSE_TXT_POS = [
 ];
 var LOSE_TXT_TWEEN = 0;
 var LOSE_TXT_TWEEN_DOWN = true;
+var FINAL_SCORE = -1;
 var SCORE_STARTING = 10;
 var SCORE = SCORE_STARTING;
 var SCORE_TIMER = 0;
+var SCORE_BUF_SEC_LEFT = 10;
 
 
 var canvas = document.getElementById('gameboard');
@@ -158,6 +160,7 @@ function hit_apple() {
     APPLE.health -= 1;
 
     if(APPLE.health <= 0) {
+        FINAL_SCORE = SCORE;
         ACTIVE_SCENE = SCENE_LOSE;
     }
 }
@@ -543,6 +546,7 @@ function update(dt) {
         SCORE += 10;
         SCORE_TIMER = 0;
     }
+    SCORE_BUF_SEC_LEFT = Math.ceil((10000 - SCORE_TIMER) / 1000);
 
     SNAKE_SPAWN_TIMER += dt;
     if(SNAKE_SPAWN_TIMER > SNAKE_SPAWN_IN) {
@@ -699,6 +703,7 @@ function drawScore() {
     ctx.font = "10px monospace";
     ctx.fillStyle = 'rgba(255, 102, 0, 0.8)';
     ctx.fillText("score: " + SCORE, 6.5, 11);
+    ctx.fillText("points in " + SCORE_BUF_SEC_LEFT + " seconds", 6.5, 20);
 }
 
 
@@ -750,10 +755,10 @@ function render_lose() {
 
     ctx.font = "16px monospace";
     ctx.fillStyle = 'rgba(0, 0, 0, 0.8)';
-    ctx.fillText("final score: " + SCORE, 11, 31);
+    ctx.fillText("final score: " + FINAL_SCORE, 11, 31);
     ctx.fillText("press 'r' to play again", 11, 54);
     ctx.fillStyle = '#aaa';
-    ctx.fillText("final score: " + SCORE, 10, 30);
+    ctx.fillText("final score: " + FINAL_SCORE, 10, 30);
     ctx.fillText("press 'r' to play again", 10, 53);
 }
 
