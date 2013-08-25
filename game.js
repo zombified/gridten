@@ -389,7 +389,7 @@ function add_barricade(dir_pointing) {
     var x, y;
     x = SELECTED_COORDS.x * BOARD_SEP + BOARD_LINE_OFFSET;
     y = SELECTED_COORDS.y * BOARD_SEP + BOARD_LINE_OFFSET;
-    obj.render = function(){drawBarricade(dir_pointing, x, y);};
+    obj.render = function(){drawBarricade(dir_pointing, x, y, obj);};
     obj.active = true;
     obj.t = OBJT_BARRICADE;
     obj.dir = dir_pointing;
@@ -504,12 +504,14 @@ function update_lose(dt) {
 }
 
 
-function drawBarricade(dir_pointing, cx, cy) {
+function drawBarricade(dir_pointing, cx, cy, obj) {
+    var fill = obj.health > Math.floor(BARRICADE_HEALTH / 2)
     var minx = cx-BARRICADE_SIZE;
     var maxx = cx+BARRICADE_SIZE;
     var miny = cy-BARRICADE_SIZE;
     var maxy = cy+BARRICADE_SIZE;
     ctx.fillStyle = BARRICADE_COLOR;
+    ctx.strokeStyle = BARRICADE_COLOR;
     ctx.beginPath();
     if(dir_pointing == NORTH) {
         ctx.moveTo(cx, miny);
@@ -536,7 +538,8 @@ function drawBarricade(dir_pointing, cx, cy) {
         ctx.lineTo(minx, cy);
     }
     ctx.closePath();
-    ctx.fill();
+    if(fill) {ctx.fill();}
+    else {ctx.stroke();}
 }
 
 function drawObjects() {
