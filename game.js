@@ -196,6 +196,14 @@ function deactivate_all_snakes() {
     }
 }
 
+function deactivate_all_objects() {
+    for(var x = 0; x < OBJECTS.length; x++) {
+        for(var y = 0; y < OBJECTS[x].length; y++) {
+            OBJECTS[x][y].active = false;
+        }
+    }
+}
+
 
 
 function Snake() {
@@ -844,7 +852,8 @@ function loop() {
 
 
 function reset_game() {
-    deactivate_all_snakes()
+    deactivate_all_objects();
+    deactivate_all_snakes();
     put_snake_in_play();
 
     APPLE.visible = false;
